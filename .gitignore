@@ -1,0 +1,8 @@
+# Datos de persistencia simulada (generados al ejecutar el sistema)
+datos/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
