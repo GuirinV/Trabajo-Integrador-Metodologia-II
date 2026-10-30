@@ -3,6 +3,16 @@ from datetime import datetime
 from modelos import Alumno, Documento, Solicitud
 from repositorio import RepositorioSolicitudes
 from requisitos import RequisitosDocumentales
+from constantes import (
+    ESTADO_PENDIENTE,
+    ESTADO_EN_REVISION,
+    ESTADO_APROBADA,
+    ESTADO_RECHAZADA,
+    RESULTADO_NO_ENCONTRADA,
+    RESULTADO_YA_RESUELTA,
+    RESULTADO_FALTAN_DOCUMENTOS,
+    RESULTADO_EXITO,
+)
 
 
 class ServicioSolicitudes:
@@ -55,7 +65,7 @@ class ServicioSolicitudes:
             nuevo_id,
             legajo,
             tipo,
-            "PENDIENTE",
+            ESTADO_PENDIENTE,
             datetime.now().strftime("%d/%m/%Y"),
         )
         self.solicitudes.append(solicitud)
@@ -78,7 +88,7 @@ class ServicioSolicitudes:
         if solicitud is None:
             print("Error: la solicitud " + str(id_solicitud) + " no existe")
             return None
-        if solicitud.estado == "APROBADA" or solicitud.estado == "RECHAZADA":
+        if solicitud.estado == ESTADO_APROBADA or solicitud.estado == ESTADO_RECHAZADA:
             print("Error: la solicitud ya fue resuelta, no se pueden adjuntar documentos")
             return None
         doc = Documento(nombre, tipo, obligatorio)
@@ -97,14 +107,14 @@ class ServicioSolicitudes:
             return False
 
         puede = False
-        if solicitud.estado == "PENDIENTE" and nuevo_estado == "EN_REVISION":
+        if solicitud.estado == ESTADO_PENDIENTE and nuevo_estado == ESTADO_EN_REVISION:
             puede = True
-        elif solicitud.estado == "EN_REVISION" and (
-            nuevo_estado == "APROBADA" or nuevo_estado == "RECHAZADA"
+        elif solicitud.estado == ESTADO_EN_REVISION and (
+            nuevo_estado == ESTADO_APROBADA or nuevo_estado == ESTADO_RECHAZADA
         ):
             puede = True
-        elif solicitud.estado == "PENDIENTE" and (
-            nuevo_estado == "APROBADA" or nuevo_estado == "RECHAZADA"
+        elif solicitud.estado == ESTADO_PENDIENTE and (
+            nuevo_estado == ESTADO_APROBADA or nuevo_estado == ESTADO_RECHAZADA
         ):
             puede = True
 
@@ -129,24 +139,24 @@ class ServicioSolicitudes:
         solicitud_encontrada = self.buscar_solicitud(id_solicitud)
         if solicitud_encontrada is None:
             print("Error: solicitud " + str(id_solicitud) + " no encontrada")
-            return -1
-        if solicitud_encontrada.estado == "APROBADA" or solicitud_encontrada.estado == "RECHAZADA":
+            return RESULTADO_NO_ENCONTRADA
+        if solicitud_encontrada.estado == ESTADO_APROBADA or solicitud_encontrada.estado == ESTADO_RECHAZADA:
             print("Error: la solicitud ya fue resuelta")
-            return -2
+            return RESULTADO_YA_RESUELTA
 
         requisitos = RequisitosDocumentales(solicitud_encontrada.tipo)
         faltantes = requisitos.faltantes(solicitud_encontrada.documentos)
 
         if len(faltantes) > 0:
             print("No se puede aprobar. Faltan documentos: " + str(faltantes))
-            solicitud_encontrada.estado = "EN_REVISION"
+            solicitud_encontrada.estado = ESTADO_EN_REVISION
             self.guardar()
-            return 0
+            return RESULTADO_FALTAN_DOCUMENTOS
 
-        solicitud_encontrada.estado = "APROBADA"
+        solicitud_encontrada.estado = ESTADO_APROBADA
         self.guardar()
         print("Solicitud " + str(id_solicitud) + " APROBADA con exito")
-        return 1
+        return RESULTADO_EXITO
 
     # ---------------------------------------------------------------
     # RECHAZAR
@@ -155,16 +165,16 @@ class ServicioSolicitudes:
         solicitud_encontrada = self.buscar_solicitud(id_solicitud)
         if solicitud_encontrada is None:
             print("Error: solicitud " + str(id_solicitud) + " no encontrada")
-            return -1
-        if solicitud_encontrada.estado == "APROBADA" or solicitud_encontrada.estado == "RECHAZADA":
+            return RESULTADO_NO_ENCONTRADA
+        if solicitud_encontrada.estado == ESTADO_APROBADA or solicitud_encontrada.estado == ESTADO_RECHAZADA:
             print("Error: la solicitud ya fue resuelta")
-            return -2
+            return RESULTADO_YA_RESUELTA
 
-        solicitud_encontrada.estado = "RECHAZADA"
+        solicitud_encontrada.estado = ESTADO_RECHAZADA
         solicitud_encontrada.motivo = motivo
         self.guardar()
         print("Solicitud " + str(id_solicitud) + " RECHAZADA. Motivo: " + motivo)
-        return 1
+        return RESULTADO_EXITO
 
     # ---------------------------------------------------------------
     # LISTAR SOLICITDES DE UN ALUMNO
