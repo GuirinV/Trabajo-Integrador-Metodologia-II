@@ -2,6 +2,7 @@ from datetime import datetime
 
 from modelos import Alumno, Documento, Solicitud
 from repositorio import RepositorioSolicitudes
+from requisitos import RequisitosDocumentales
 
 
 class ServicioSolicitudes:
@@ -133,22 +134,8 @@ class ServicioSolicitudes:
             print("Error: la solicitud ya fue resuelta")
             return -2
 
-        requeridos = []
-        if solicitud_encontrada.tipo == "EQUIVALENCIA":
-            requeridos = ["plan de estudio", "syllabus"]
-        elif solicitud_encontrada.tipo == "CERTIFICADO":
-            requeridos = ["probante de pago"]
-        else:
-            requeridos = []
-
-        nombres_adjuntos = []
-        for d in solicitud_encontrada.documentos:
-            nombres_adjuntos.append(d.nombre.lower())
-
-        faltantes = []
-        for r in requeridos:
-            if not (r in nombres_adjuntos):
-                faltantes.append(r)
+        requisitos = RequisitosDocumentales(solicitud_encontrada.tipo)
+        faltantes = requisitos.faltantes(solicitud_encontrada.documentos)
 
         if len(faltantes) > 0:
             print("No se puede aprobar. Faltan documentos: " + str(faltantes))
