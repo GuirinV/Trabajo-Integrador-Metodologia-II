@@ -14,6 +14,12 @@ class ServicioSolicitudes:
         self.solicitudes = []
         self.cargar_datos()
 
+    def buscar_solicitud(self, id_solicitud):
+        for s in self.solicitudes:
+            if s.id == id_solicitud:
+                return s
+        return None
+
     # ---------------------------------------------------------------
     # ALTA DE ALUMNO
     # ---------------------------------------------------------------
@@ -64,10 +70,7 @@ class ServicioSolicitudes:
     # ADJUNTAR DOCUMENTO
     # ---------------------------------------------------------------
     def adjuntar_documento(self, id_solicitud, nombre, tipo, obligatorio):
-        solicitud = None
-        for s in self.solicitudes:
-            if s.id == id_solicitud:
-                solicitud = s
+        solicitud = self.buscar_solicitud(id_solicitud)
         if solicitud is None:
             print("Error: la solicitud " + str(id_solicitud) + " no existe")
             return None
@@ -84,10 +87,7 @@ class ServicioSolicitudes:
     # CAMBIAR ESTADO
     # ---------------------------------------------------------------
     def cambiar_estado(self, id_solicitud, nuevo_estado):
-        solicitud = None
-        for s in self.solicitudes:
-            if s.id == id_solicitud:
-                solicitud = s
+        solicitud = self.buscar_solicitud(id_solicitud)
         if solicitud is None:
             print("Error: la solicitud " + str(id_solicitud) + " no existe")
             return False
@@ -122,10 +122,7 @@ class ServicioSolicitudes:
     # APROBAR  (valida documentos obligatorios)
     # ---------------------------------------------------------------
     def aprobar(self, id_solicitud):
-        solicitud_encontrada = None
-        for s in self.solicitudes:
-            if s.id == id_solicitud:
-                solicitud_encontrada = s
+        solicitud_encontrada = self.buscar_solicitud(id_solicitud)
         if solicitud_encontrada is None:
             print("Error: solicitud " + str(id_solicitud) + " no encontrada")
             return -1
@@ -165,10 +162,7 @@ class ServicioSolicitudes:
     # RECHAZAR
     # ---------------------------------------------------------------
     def rechazar(self, id_solicitud, motivo):
-        solicitud_encontrada = None
-        for s in self.solicitudes:
-            if s.id == id_solicitud:
-                solicitud_encontrada = s
+        solicitud_encontrada = self.buscar_solicitud(id_solicitud)
         if solicitud_encontrada is None:
             print("Error: solicitud " + str(id_solicitud) + " no encontrada")
             return -1
@@ -212,10 +206,7 @@ class ServicioSolicitudes:
     # VER DETALLE
     # ---------------------------------------------------------------
     def ver_detalle(self, id_solicitud):
-        solicitud = None
-        for s in self.solicitudes:
-            if s.id == id_solicitud:
-                solicitud = s
+        solicitud = self.buscar_solicitud(id_solicitud)
         if solicitud is None:
             print("Error: la solicitud " + str(id_solicitud) + " no existe")
             return None
