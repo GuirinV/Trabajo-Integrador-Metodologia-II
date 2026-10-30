@@ -1,18 +1,18 @@
-import json
-import os
 from datetime import datetime
 
 from modelos import Alumno, Documento, Solicitud
-
-ARCHIVO_DATOS = "datos/datos.json"
+from repositorio import RepositorioSolicitudes
 
 
 class ServicioSolicitudes:
 
-    def __init__(self):
+    def __init__(self, repositorio=None):
         self.alumnos = []
         self.solicitudes = []
-        self.cargar_datos()
+        if repositorio is None:
+            repositorio = RepositorioSolicitudes()
+        self.repositorio = repositorio
+        self.alumnos, self.solicitudes = self.repositorio.cargar()
 
     def buscar_solicitud(self, id_solicitud):
         for s in self.solicitudes:
@@ -20,13 +20,16 @@ class ServicioSolicitudes:
                 return s
         return None
 
+    def guardar(self):
+        self.repositorio.guardar(self.alumnos, self.solicitudes)
+
     # ---------------------------------------------------------------
     # ALTA DE ALUMNO
     # ---------------------------------------------------------------
     def alta_alumno(self, legajo, nombre, carrera, email):
         a = Alumno(legajo, nombre, carrera, email)
         self.alumnos.append(a)
-        self.guardar_datos()
+        self.guardar()
         print("Alumno dado de alta: " + nombre + " (legajo " + str(legajo) + ")")
         return a
 
@@ -55,7 +58,7 @@ class ServicioSolicitudes:
             datetime.now().strftime("%d/%m/%Y"),
         )
         self.solicitudes.append(solicitud)
-        self.guardar_datos()
+        self.guardar()
         print(
             "Solicitud "
             + str(nuevo_id)
@@ -79,7 +82,7 @@ class ServicioSolicitudes:
             return None
         doc = Documento(nombre, tipo, obligatorio)
         solicitud.documentos.append(doc)
-        self.guardar_datos()
+        self.guardar()
         print("Documento '" + nombre + "' adjuntado a la solicitud " + str(id_solicitud))
         return doc
 
@@ -114,7 +117,7 @@ class ServicioSolicitudes:
             return False
 
         solicitud.estado = nuevo_estado
-        self.guardar_datos()
+        self.guardar()
         print("Solicitud " + str(id_solicitud) + " ahora esta en estado " + nuevo_estado)
         return True
 
@@ -150,11 +153,11 @@ class ServicioSolicitudes:
         if len(faltantes) > 0:
             print("No se puede aprobar. Faltan documentos: " + str(faltantes))
             solicitud_encontrada.estado = "EN_REVISION"
-            self.guardar_datos()
+            self.guardar()
             return 0
 
         solicitud_encontrada.estado = "APROBADA"
-        self.guardar_datos()
+        self.guardar()
         print("Solicitud " + str(id_solicitud) + " APROBADA con exito")
         return 1
 
@@ -172,7 +175,7 @@ class ServicioSolicitudes:
 
         solicitud_encontrada.estado = "RECHAZADA"
         solicitud_encontrada.motivo = motivo
-        self.guardar_datos()
+        self.guardar()
         print("Solicitud " + str(id_solicitud) + " RECHAZADA. Motivo: " + motivo)
         return 1
 
@@ -225,52 +228,3 @@ class ServicioSolicitudes:
         if hasattr(solicitud, "motivo"):
             print("  Motivo de rechazo: " + solicitud.motivo)
         return solicitud
-
-    # ---------------------------------------------------------------
-    # PERSISTENCIA (guarda y carga JSON)
-    # ---------------------------------------------------------------
-    def guardar_datos(self):
-        datos = {"alumnos": [], "solicitudes": []}
-        for a in self.alumnos:
-            datos["alumnos"].append(
-                {
-                    "legajo": a.legajo,
-                    "nombre": a.nombre,
-                    "carrera": a.carrera,
-                    "email": a.email,
-                }
-            )
-        for s in self.solicitudes:
-            docs = []
-            for d in s.documentos:
-                docs.append({"nombre": d.nombre, "tipo": d.tipo, "obligatorio": d.obligatorio})
-            datos["solicitudes"].append(
-                {
-                    "id": s.id,
-                    "legajo": s.legajo_alumno,
-                    "tipo": s.tipo,
-                    "estado": s.estado,
-                    "fecha": s.fecha_creacion,
-                    "documentos": docs,
-                }
-            )
-        if not os.path.exists("datos"):
-            os.makedirs("datos")
-        f = open(ARCHIVO_DATOS, "w")
-        f.write(json.dumps(datos, indent=2))
-        f.close()
-
-    def cargar_datos(self):
-        if not os.path.exists(ARCHIVO_DATOS):
-            return
-        f = open(ARCHIVO_DATOS, "r")
-        contenido = f.read()
-        f.close()
-        datos = json.loads(contenido)
-        for a in datos["alumnos"]:
-            self.alumnos.append(Alumno(a["legajo"], a["nombre"], a["carrera"], a["email"]))
-        for s in datos["solicitudes"]:
-            solicitud = Solicitud(s["id"], s["legajo"], s["tipo"], s["estado"], s["fecha"])
-            for d in s["documentos"]:
-                solicitud.documentos.append(Documento(d["nombre"], d["tipo"], d["obligatorio"]))
-            self.solicitudes.append(solicitud)
